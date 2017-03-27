@@ -48,6 +48,12 @@
   int preState=0;
   int rev = 0;
   int intTime;
+  int rots = 0;
+  long avgSpd = 0;
+  long rotSpd = 0;
+  long dist =0;
+  int diameter = 0.000426261; //in miles, so already in miles/(time)
+  int splits[] = [0,0,0,0,0];
 
 Adafruit_TFTLCD tft(LCD_CS, LCD_CD, LCD_WR, LCD_RD, LCD_RESET);
 // If using the shield, all control and data lines are fixed, and
@@ -223,32 +229,6 @@ unsigned long errorFile(){
   tft.setTextColor(WHITE);  tft.setTextSize(1);
   tft.println("We can't open the file, try a different SD card.");
 }
-unsigned long testText() {
-  tft.fillScreen(BLACK);
-  unsigned long start = micros();
-  tft.setCursor(0, 0);
-  tft.setTextColor(WHITE);  tft.setTextSize(1);
-  tft.println("Hello World!");
-  tft.setTextColor(YELLOW); tft.setTextSize(2);
-  tft.println(1234.56);
-  tft.setTextColor(RED);    tft.setTextSize(3);
-  tft.println(0xDEADBEEF, HEX);
-  tft.println();
-  tft.setTextColor(GREEN);
-  tft.setTextSize(5);
-  tft.println("Groop");
-  tft.setTextSize(2);
-  tft.println("I implore thee,");
-  tft.setTextSize(1);
-  tft.println("my foonting turlingdromes.");
-  tft.println("And hooptiously drangle me");
-  tft.println("with crinkly bindlewurdles,");
-  tft.println("Or I will rend thee");
-  tft.println("in the gobberwarts");
-  tft.println("with my blurglecruncheon,");
-  tft.println("see if I don't!");
-  return micros() - start;
-}
 
 unsigned long printDebug(){
   int curState = analogRead(A5);
@@ -276,6 +256,20 @@ unsigned long printDebug(){
   preState = curState;
   //end*/
   return micros() - start;
+}
+
+unsigned long run(){
+  int curState = analogRead(A5);
+  unsigned long curTime = micros();
+  if(curState==0 && curState!=preState){
+    rots++;
+  }
+  dist = diameter*3.14159265*rots;
+  avgSpd = dist/(((curTime-intTime)*.001)/360)
+  //
+  //attempt to calculate speed very number of revolutions
+  //
+  int preState = curState;
 }
 
 
