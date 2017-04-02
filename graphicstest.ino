@@ -52,8 +52,11 @@
   long avgSpd = 0;
   long rotSpd = 0;
   long dist =0;
-  int diameter = 0.000426261; //in miles, so already in miles/(time)
-  int splits[] = [0,0,0,0,0];
+  long diameter = 2.2507;//0.000426261; //in miles, so already in miles/(time)
+  int splits[] = {0,0,0,0,0};
+  int sDist[] = {0,0,0,0,0};
+  int s = 4;
+  long rpm = 0;
 
 Adafruit_TFTLCD tft(LCD_CS, LCD_CD, LCD_WR, LCD_RD, LCD_RESET);
 // If using the shield, all control and data lines are fixed, and
@@ -177,7 +180,8 @@ if(identifier == 0x9325) {
 }
 
 void loop(void) {
-  printDebug();
+  //printDebug();
+  printRun();
   String dataString="";
   int sensor = analogRead(hall);
   dataString+=String(millis()-intTime);
@@ -186,7 +190,7 @@ void loop(void) {
   dataFile.println(dataString);
   Serial.println(dataString);
   dataFile.flush();
-  delay(50);
+  //delay(50);
   /*for(uint8_t rotation=0; rotation<4; rotation++) {
     tft.setRotation(rotation);
     testText();
@@ -236,7 +240,7 @@ unsigned long printDebug(){
   int x,y,w = tft.width(),h = tft.height();
   for(y=24;y<47;y++) tft.drawFastHLine(0,y,w,BLACK);
   for(x=0;x<w;x++) tft.drawFastHLine(x/4,0,h/4,BLACK);
-  for(y=74;y<100;y++) tft.drawFastHLine(0,y,w,BLACK);
+  for(y=74;y<102;y++) tft.drawFastHLine(0,y,w,BLACK);
   for(x=0;x<w;x++) tft.drawFastHLine(x,0,h/4,BLACK);
   unsigned long start = micros();
   tft.setCursor(0,0);
@@ -245,7 +249,7 @@ unsigned long printDebug(){
   tft.println(curState);
   //tft.println("");
   tft.print("Is triggered? ");
-  if(curState==0)
+  if(curState<15)
   tft.println("yes");else
   tft.println("no");
   /*Following code block is for total number of increments
@@ -258,17 +262,56 @@ unsigned long printDebug(){
   return micros() - start;
 }
 
-unsigned long run(){
+unsigned long printRun(){
   int curState = analogRead(A5);
-  unsigned long curTime = micros();
-  if(curState==0 && curState!=preState){
+  if(curState<15)
+    curState = 1;
+  else
+    curState = 0;
+  if(curState==1){
+  unsigned long curTime = millis();
+  if(curState==1 && curState!=preState){
     rots++;
   }
   dist = diameter*3.14159265*rots;
-  avgSpd = dist/(((curTime-intTime)*.001)/360)
-  //
-  //attempt to calculate speed very number of revolutions
-  //
+  avgSpd = dist/(((curTime-intTime)*.001)/360);
+  splits[0] =  splits[1];
+  sDist[0] = sDist[1];
+  splits[1] =  splits[2];
+  sDist[1] = sDist[2];
+  splits[2] =  splits[3];
+  sDist[2] = sDist[3];
+  splits[3] =  splits[4];
+  sDist[3] = sDist[4];
+  splits[4] = curTime;
+  sDist[4]=dist;
+
+  rpm = ((sDist[4]-sDist[1])/(diameter*3.14159265))/(.001/60*(splits[4]-splits[1]));
+  long shtSpd = .681818*((sDist[4]-sDist[1])/(.001*(splits[4]-splits[1])));
+  if((splits[4]-splits[3])>250){
+  int x,y,w = tft.width(),h = tft.height();
+  for(y=24;y<46;y++) tft.drawFastHLine(0,y,w,BLACK);
+  for(x=0;x<w/4;x++) tft.drawFastHLine(x/4,0,h/4,BLACK);
+  for(y=71;y<94;y++) tft.drawFastHLine(0,y,w,BLACK);
+  for(x=0;x<w/4;x++) tft.drawFastHLine(x,0,h/4,BLACK);
+  for(y=120;y<140;y++) tft.drawFastHLine(0,y,w,BLACK);
+  for(x=0;x<w/4;x++) tft.drawFastHLine(x,0,h/4,BLACK);
+  tft.setCursor(0,0);
+  tft.setTextColor(WHITE); tft.setTextSize(3);
+  //tft.println("");
+
+  tft.println("Distance: ");
+  tft.println(dist);
+  
+  tft.println("Avg. RPM: ");
+  tft.println(rpm);
+  
+  tft.println("Speed: ");
+  if(splits[0]!=0)
+  tft.println(shtSpd);
+  }
+  
+  }
   int preState = curState;
 }
 
