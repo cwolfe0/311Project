@@ -154,8 +154,8 @@ unsigned long printRun(){ //Function to run under normal operation
   if(splits[0]!=0){
   tft.print(shtSpd); tft.println(" mph");}
   lstUpdate = curTime; //Records the time the screen was updated for future use.
-  }}
-  String dataString = "";
+  }
+  String dataString = ""; //Prints data as [time,state(0/1),dist(ft),rpm(r/min),speed]
   dataString+=String(curTime-intTime);
   dataString+=String(",");
   dataString+=String(curState);
@@ -168,7 +168,7 @@ unsigned long printRun(){ //Function to run under normal operation
   dataFile.println(dataString);
   Serial.println(dataString);
   dataFile.flush();
-  }
+  }}
   preState = curState; //Records current state for future use.
 }
 
