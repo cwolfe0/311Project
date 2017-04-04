@@ -164,7 +164,7 @@ unsigned long printRun(){ //Function to run under normal operation
   dataString+=String(",");
   dataString+=String(rpm);
   dataString+=String(",");
-  dataString+=String(shtSpd);
+  dataString+=String((int) shtSpd);
   dataFile.println(dataString);
   Serial.println(dataString);
   dataFile.flush();
