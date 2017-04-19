@@ -11,7 +11,6 @@
 #define LCD_CD A2 // Command/Data goes to Analog 2
 #define LCD_WR A1 // LCD Write goes to Analog 1
 #define LCD_RD A0 // LCD Read goes to Analog 0
-
 #define LCD_RESET A4 // Can alternately just connect to Arduino's reset pin
 
 
@@ -27,7 +26,7 @@
 
 // Variables I added.
   const int hall = A5;
-  const int chipSelect = 4;
+  const int sd = 4;
   File dataFile;
   int preState = 0;
   int rev = 0;
@@ -37,8 +36,8 @@
   long rotSpd = 0;
   long dist =0;
   long diameter = 2.2507;
-  int splits[] = {0,0,0,0,0};
-  int sDist[] = {0,0,0,0,0};
+  long splits[] = {0,0,0,0,0};
+  long sDist[] = {0,0,0,0,0};
   int s = 4;
   long rpm = 0;
   long shtSpd = 0;
@@ -56,9 +55,15 @@ void setup(){
   tft.begin(identifier);
   tft.setRotation(0);
   //Begin SD Testing Block
-  if (!SD.begin(chipSelect)) {
+  if (!SD.begin(sd)) {
     errorSD();
     while (1) ;
+  }
+  String fileName = "bike.csv";
+  for(int i = 0;SD.exists(fileName);i++){
+    fileName = "bike";
+    fileName+= String(i);
+    fileName+= ".csv";
   }
   dataFile = SD.open("datalog.txt", FILE_WRITE);
   if (! dataFile) {
@@ -74,8 +79,6 @@ void setup(){
   tft.fillScreen(BLACK);
   preState = 0;
   curTime = intTime;
-  String header = "Time,On,Distance,RPM,Speed";
-  dataFile.println(header);
   dataFile.flush();
 }
 
@@ -111,7 +114,7 @@ unsigned long printRun(){ //Function to run under normal operation
   if(curState==1){//See if sensor is triggered.
   if(curState!=preState){//Make sure the sensor wasn't previously triggered.
   rots++;
-  dist = diameter*3.14159265*rots;//Calculate distance from diameter*pi*(# of rotations)
+  dist = 85.28125/12*rots;//Calculate distance from diameter*pi*(# of rotations)
   avgSpd = dist/(((curTime-intTime)*.001)/360);//Find total avg speed from distance over time in hours.
   //The following block records the last five sets to memory speed calcs.
   for(int i = 0;i<=3;i++){
@@ -122,8 +125,8 @@ unsigned long printRun(){ //Function to run under normal operation
   sDist[4]=dist;
   //END PREVIOUS BLOCK
   //Short means based on last 5 rotations.
-  rpm = ((sDist[4]-sDist[1])/(diameter*3.14159265))/(.001/60*(splits[4]-splits[1])); //Find short RPM (based on last 5 revs).
-  long shtSpd = .681818*((sDist[4]-sDist[1])/(.001*(splits[4]-splits[1]))); //Find short speed, convert to mph.
+  rpm = ((sDist[4]-sDist[0])/(85.28125/12))/(.001/60*(splits[4]-splits[0])); //Find short RPM (based on last 5 revs).
+  long shtSpd = .681818*((sDist[4]-sDist[0])/(.001*(splits[4]-splits[0]))); //Find short speed, convert to mph.
   long tDelta = curTime-lstUpdate; // Calculate time between the last time the screen updated and now
   /*
    * Writes to screen at most every 350 ms
@@ -149,11 +152,16 @@ unsigned long printRun(){ //Function to run under normal operation
   tft.println("Distance: ");
   tft.print(dist); tft.println(" ft.");
   tft.println("Avg. RPM: ");
-  tft.println(rpm);
+  if(splits[0]!=0){
+  tft.println(rpm);}
   tft.println("Speed: ");
   if(splits[0]!=0){
   tft.print(shtSpd); tft.println(" mph");}
   lstUpdate = curTime; //Records the time the screen was updated for future use.
+  }
+  if(splits[0]==0){
+    shtSpd = 0;
+    rpm = 0;
   }
   String dataString = ""; //Prints data as [time,state(0/1),dist(ft),rpm(r/min),speed]
   dataString+=String(curTime-intTime);
